@@ -1,0 +1,7 @@
+{
+  "name": "Red51 Technology - Tienda Online",
+  "description": "The official online store for Red51 Technology. Discover our latest products, from smartphones to accessories.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
