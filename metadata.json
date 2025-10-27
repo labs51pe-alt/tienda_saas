@@ -1,6 +1,6 @@
 {
-  "name": "Red51 Technology - Tienda Online",
-  "description": "The official online store for Red51 Technology. Discover our latest products, from smartphones to accessories.",
+  "name": "E-Commerce SaaS Platform",
+  "description": "A flexible SaaS e-commerce platform for any business. Create and manage your own online store with ease.",
   "requestFramePermissions": [
     "geolocation"
   ]
