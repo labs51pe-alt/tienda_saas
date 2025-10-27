@@ -1882,8 +1882,8 @@
                  <div class="auth-info" style="margin-top: 2rem; text-align: left;">
                     <p style="margin-bottom: 0.5rem; font-weight: 600;">Usuarios de Demostración:</p>
                     <ul style="list-style: none; padding: 0; font-size: 0.9rem;">
-                        <li><strong>Admin:</strong> admin@saas.com</li>
-                        <li><strong>Emprendedor:</strong> emprendedor@gamer-gear.com</li>
+                        <li><strong>Super Admin:</strong> admin@saas.com</li>
+                        <li><strong>Dueño de Tienda:</strong> emprendedor@gamer-gear.com</li>
                         <li>(Cualquier contraseña funciona)</li>
                     </ul>
                 </div>
@@ -1897,6 +1897,7 @@
                 <div>
                     <div class="logo">
                          <span class="logo-red">saas</span><span class="logo-number">Pe</span>
+                         <span class="logo-subtitle" style="margin-top: 0; font-size: 0.8rem;">Super Admin</span>
                     </div>
                 </div>
                 <div class="nav-links">
@@ -1906,7 +1907,7 @@
             </nav>
         </header>
         <main class="container">
-            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Dashboard de Administrador</h1>
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Dashboard del SaaS</h1>
             <p style="color: var(--text-light); margin-bottom: 2rem;">Vista general de la plataforma.</p>
             <div class="kpi-grid">
                  <div class="kpi-card" style="border-left-color: var(--accent);">
@@ -1924,7 +1925,7 @@
             </div>
              <div class="admin-section">
                 <div class="admin-header" style="margin-bottom: 1rem;">
-                    <h2>Tiendas Registradas</h2>
+                    <h2>Gestión de Tiendas (Tenants)</h2>
                     <button data-action="create-store" class="btn-secondary">+ Crear Tienda</button>
                 </div>
                 <div style="overflow-x: auto;">
@@ -2312,200 +2313,179 @@
                     <div id="cartContent"></div>
                     <div id="successMessage" class="success-message">
                         <div class="success-icon">✓</div>
-                        <h3>Pedido Realizado con Exito</h3>
-                        <p>Hemos recibido tu pedido. Te contactaremos pronto por WhatsApp para coordinar el pago y la entrega.</p>
-                        <button class="btn-primary" onclick="window.app.cerrarYLimpiar()">Continuar Comprando</button>
+                        <h3>¡Pedido Realizado con Éxito!</h3>
+                        <p>Hemos recibido tu pedido. Nos pondremos en contacto contigo pronto por WhatsApp para coordinar el pago y la entrega.</p>
+                        <button class="btn-primary" onclick="window.app.cerrarYLimpiar()">Seguir Comprando</button>
                     </div>
                 </div>
             </div>
         </div>
+        
+        <div id="productDetailModal" class="modal">
+            <div class="modal-content" style="max-width: 900px;">
+                <div class="modal-header">
+                    <h2>Detalles del Producto</h2>
+                    <button class="close-btn" onclick="window.app.cerrarDetalleProducto()">&times;</button>
+                </div>
+                <div class="modal-body" id="productDetailContent"></div>
+            </div>
+        </div>
 
         <div id="productoModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="productoModalTitle">Agregar Producto</h2>
-                    <button class="close-btn" onclick="window.app.cerrarModalProducto()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="productoForm" onsubmit="window.app.guardarProducto(event)">
-                        <input type="hidden" id="productoId">
-                        <div class="form-group">
-                            <label>Nombre del Producto</label>
-                            <input type="text" id="productoNombre" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Marca</label>
-                            <input type="text" id="productoMarca" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Categoria</label>
-                            <select id="productoCategoria" required></select>
-                        </div>
-                        <div class="form-group">
-                            <label>Descripcion</label>
-                            <textarea id="productoDescripcion" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Precio Base (S/)</label>
-                            <input type="number" id="productoPrecio" step="0.01" min="0" required>
-                            <div class="form-hint">Este es el precio si el producto no tiene variantes. Se usará si un grupo de variantes no tiene precio específico.</div>
+            <div class="modal-content" style="max-width: 900px;">
+                <form id="productoForm">
+                    <input type="hidden" id="productoId">
+                    <div class="modal-header">
+                        <h2 id="productoModalTitle">Agregar Producto</h2>
+                        <button type="button" class="close-btn" onclick="window.app.cerrarModalProducto()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group" style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+                            <div>
+                                <label for="productoImagen">Imagen Principal (URL)</label>
+                                <input type="url" id="productoImagen" oninput="window.app.previewImagen('imagePreview', this.value)">
+                                <div id="imagePreview" class="image-preview">
+                                    <span class="image-preview-text">📦</span>
+                                    <div class="upload-progress" id="uploadProgressProducto" style="display:none;"><div class="upload-progress-bar" id="uploadProgressBarProducto"></div></div>
+                                </div>
+                                <input type="file" id="imageUploaderProducto" accept="image/*" style="display: none;" onchange="window.app.subirImagenCloudinary(event, 'producto')">
+                                <button type="button" class="btn-upload" style="width:100%; margin-top:0.5rem;" onclick="document.getElementById('imageUploaderProducto').click()">Subir Imagen</button>
+                            </div>
+                            <div>
+                                <div class="form-group">
+                                    <label for="productoNombre">Nombre del Producto</label>
+                                    <input type="text" id="productoNombre" required>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label for="productoMarca">Marca</label>
+                                        <input type="text" id="productoMarca">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="productoCategoria">Categoría</label>
+                                        <select id="productoCategoria" required></select>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                          <div class="form-group">
-                            <label>Stock Base (Inventario)</label>
-                            <input type="number" id="productoStock" step="1" min="0" required placeholder="Cantidad disponible">
-                            <div class="form-hint">Si usas variantes, este campo se calculará automáticamente.</div>
+                            <label for="productoDescripcion">Descripción</label>
+                            <textarea id="productoDescripcion"></textarea>
                         </div>
-                        <div class="form-group">
-                            <label>Variantes (Opcional)</label>
-                            <div class="variants-manager">
-                                <p class="form-hint" style="margin-top: 0; margin-bottom: 1rem;">
-                                    Gestiona variantes por grupos. Ej: Opción Principal "Color", Opción Secundaria "Talla".
-                                    Luego añade valores como "Negro" y dentro de él, las tallas con su precio y stock.
-                                </p>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                                    <div class="form-group" style="margin: 0;">
-                                        <label>Opción Principal (ej. Color)</label>
-                                        <input type="text" id="primaryOptionName" placeholder="Color">
-                                    </div>
-                                    <div class="form-group" style="margin: 0;">
-                                        <label>Opción Secundaria (ej. Talla)</label>
-                                        <input type="text" id="secondaryOptionName" placeholder="Talla">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label>Añadir un valor para la opción principal (ej. Negro, Blanco)</label>
-                                    <div style="display: flex; gap: 0.5rem;">
-                                        <input type="text" id="newPrimaryValueInput" placeholder="Negro" style="flex-grow: 1;">
-                                        <button type="button" class="btn-secondary" onclick="window.app.addVariantGroupUI()">Añadir Grupo</button>
-                                    </div>
-                                </div>
-                                <div id="variantGroupsContainer" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
-                                    <!-- Variant groups will be injected here -->
-                                </div>
+                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                            <div class="form-group">
+                                <label for="productoPrecio">Precio (S/)</label>
+                                <input type="number" step="0.01" id="productoPrecio" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="productoStock">Stock</label>
+                                <input type="number" step="1" id="productoStock" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="productoIcon">Icono (Emoji)</label>
+                                <input type="text" id="productoIcon" placeholder="📦">
+                            </div>
+                            <div class="form-group">
+                                <label for="productoBadge">Badge</label>
+                                <input type="text" id="productoBadge" placeholder="Ej: Nuevo, Oferta">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label>Imagen del Producto</label>
-                            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                                <button type="button" class="btn-upload" onclick="document.getElementById('imageFile').click()">
-                                    📤 Subir Imagen
-                                </button>
-                                <input type="file" id="imageFile" accept="image/*" style="display:none;" onchange="window.app.subirImagenCloudinary(event, 'producto')">
-                                <input type="url" id="productoImagen" placeholder="O pega URL de imagen" style="flex: 1;" oninput="window.app.previewImagen('imagePreview', this.value)">
-                            </div>
-                            <div class="form-hint">Sube una imagen desde tu dispositivo o pega una URL externa</div>
-                            <div class="image-preview" id="imagePreview">
-                                <span class="image-preview-text">🖼️</span>
-                                <div class="upload-progress" id="uploadProgressProducto" style="display: none;">
-                                    <div class="upload-progress-bar" id="uploadProgressBarProducto" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Icono (Emoji) - Se usa si no hay imagen</label>
-                            <input type="text" id="productoIcon" maxlength="2" placeholder="📱">
-                        </div>
-                        <div class="form-group">
-                            <label>Etiqueta (Opcional)</label>
-                            <input type="text" id="productoBadge" placeholder="Nuevo, Popular, Oferta...">
-                        </div>
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="productoActivo" checked> Producto activo
+                         <div class="form-group">
+                            <label for="productoActivo" style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" id="productoActivo" checked style="width: auto;">
+                                Producto Activo (Visible en la tienda)
                             </label>
                         </div>
-                        <button type="submit" class="btn-primary">Guardar Producto</button>
-                    </form>
-                </div>
+                        <div class="variants-manager">
+                            <h4>Gestor de Variantes (Opcional)</h4>
+                            <p class="form-hint">Úsalo para productos con diferentes tallas, colores, etc. Si añades variantes, el stock principal se calculará automáticamente.</p>
+                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;">
+                                <div class="form-group">
+                                    <label>Nombre Opción Principal</label>
+                                    <input type="text" id="primaryOptionName" placeholder="Ej: Color">
+                                </div>
+                                <div class="form-group">
+                                    <label>Nombre Opción Secundaria</label>
+                                    <input type="text" id="secondaryOptionName" placeholder="Ej: Talla">
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:1rem; align-items:flex-end; margin-bottom:1.5rem;">
+                                <div class="form-group" style="flex-grow:1; margin-bottom:0;">
+                                    <label for="newPrimaryValueInput">Añadir valor de opción principal</label>
+                                    <input type="text" id="newPrimaryValueInput" placeholder="Ej: Negro, Rojo...">
+                                </div>
+                                <button type="button" class="btn-secondary" onclick="window.app.addVariantGroupUI()">Añadir Grupo</button>
+                            </div>
+                            <div id="variantGroupsContainer" style="display:flex; flex-direction:column; gap:1.5rem;"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" onclick="window.app.cerrarModalProducto()">Cancelar</button>
+                        <button type="submit" class="btn-primary" style="width: auto;">Guardar Producto</button>
+                    </div>
+                </form>
             </div>
         </div>
         
         <div id="categoriaModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="categoriaModalTitle">Agregar Categoría</h2>
-                    <button class="close-btn" onclick="window.app.cerrarModalCategoria()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="categoriaForm" onsubmit="window.app.guardarCategoria(event)">
-                        <input type="hidden" id="categoriaId">
+            <div class="modal-content" style="max-width: 500px;">
+                <form id="categoriaForm">
+                    <input type="hidden" id="categoriaId">
+                    <div class="modal-header">
+                        <h2 id="categoriaModalTitle">Agregar Categoría</h2>
+                        <button type="button" class="close-btn" onclick="window.app.cerrarModalCategoria()">&times;</button>
+                    </div>
+                    <div class="modal-body">
                         <div class="form-group">
-                            <label>Nombre de la Categoría</label>
+                            <label for="categoriaNombre">Nombre de la Categoría</label>
                             <input type="text" id="categoriaNombre" required oninput="window.app.generarSlug(this.value, 'categoriaSlug')">
                         </div>
-                         <div class="form-group">
-                            <label>Slug (URL amigable)</label>
+                        <div class="form-group">
+                            <label for="categoriaSlug">Slug (URL amigable)</label>
                             <input type="text" id="categoriaSlug" required>
-                            <div class="form-hint">Se genera automáticamente, pero puedes ajustarlo. Usa solo letras, números y guiones.</div>
+                        </div>
+                         <div class="form-group">
+                            <label for="categoriaIcon">Icono (Emoji)</label>
+                            <input type="text" id="categoriaIcon" placeholder="📁">
                         </div>
                         <div class="form-group">
-                            <label>Imagen de la Categoría</label>
-                            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                                <button type="button" class="btn-upload" onclick="document.getElementById('imageFileCategoria').click()">
-                                    📤 Subir Imagen
-                                </button>
-                                <input type="file" id="imageFileCategoria" accept="image/*" style="display:none;" onchange="window.app.subirImagenCloudinary(event, 'categoria')">
-                                <input type="url" id="categoriaImagen" placeholder="O pega URL de imagen" style="flex: 1;" oninput="window.app.previewImagen('imagePreviewCategoria', this.value)">
-                            </div>
-                            <div class="image-preview" id="imagePreviewCategoria">
-                                <span class="image-preview-text">🖼️</span>
-                                <div class="upload-progress" id="uploadProgressCategoria" style="display: none;">
-                                    <div class="upload-progress-bar" id="uploadProgressBarCategoria" style="width: 0%;"></div>
-                                </div>
-                            </div>
+                            <label for="categoriaImagen">Imagen de Portada (URL)</label>
+                            <input type="url" id="categoriaImagen" oninput="window.app.previewImagen('imagePreviewCategoria', this.value)">
+                            <div id="imagePreviewCategoria" class="image-preview" style="width:100px; height:100px;"><span class="image-preview-text">📁</span></div>
+                            <input type="file" id="imageUploaderCategoria" accept="image/*" style="display: none;" onchange="window.app.subirImagenCloudinary(event, 'categoria')">
+                            <button type="button" class="btn-upload" style="margin-top:0.5rem;" onclick="document.getElementById('imageUploaderCategoria').click()">Subir Imagen</button>
                         </div>
-                        <div class="form-group">
-                            <label>Icono (Emoji) - Se usa si no hay imagen</label>
-                            <input type="text" id="categoriaIcon" maxlength="2" placeholder="📁">
-                        </div>
-                        <button type="submit" class="btn-primary">Guardar Categoría</button>
-                    </form>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" onclick="window.app.cerrarModalCategoria()">Cancelar</button>
+                        <button type="submit" class="btn-primary" style="width: auto;">Guardar Categoría</button>
+                    </div>
+                </form>
             </div>
         </div>
 
         <div id="orderDetailsModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 id="orderDetailsTitle">Detalles del Pedido</h2>
+                    <h2>Detalles del Pedido</h2>
                     <button class="close-btn" onclick="window.app.cerrarDetallesPedido()">&times;</button>
                 </div>
                 <div class="modal-body" id="orderDetailsContent"></div>
             </div>
         </div>
 
-        <div id="productDetailModal" class="modal">
-            <div class="modal-content" style="max-width: 900px;">
-                <div class="modal-header">
-                    <h2 id="productDetailTitle">Detalles del Producto</h2>
-                    <button class="close-btn" onclick="window.app.cerrarDetalleProducto()">&times;</button>
-                </div>
-                <div class="modal-body" id="productDetailContent">
-                    <!-- Contenido se carga dinamicamente -->
-                </div>
-            </div>
-        </div>
-        
         <div id="importPreviewModal" class="modal">
-            <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-content" style="max-width: 1200px;">
                 <div class="modal-header">
                     <h2>Previsualización de Importación</h2>
                     <button class="close-btn" onclick="window.app.cerrarModalPrevisualizacion()">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <div id="importSummary" class="auth-info" style="margin-bottom: 1.5rem;"></div>
+                    <div id="importSummary"></div>
                     <div class="import-preview-table-container">
                         <table class="products-table import-preview-table">
                             <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Marca</th>
-                                    <th>Categoría</th>
-                                    <th>Precio</th>
-                                    <th>Stock</th>
-                                    <th>Estado</th>
-                                    <th>Comentarios</th>
-                                </tr>
+                                <tr><th>Nombre</th><th>Marca</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Comentarios</th></tr>
                             </thead>
                             <tbody id="importPreviewTableBody"></tbody>
                         </table>
@@ -2513,13 +2493,13 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn-secondary" onclick="window.app.cerrarModalPrevisualizacion()">Cancelar</button>
-                    <button id="confirmImportBtn" class="btn-import" onclick="window.app.confirmarImportacionProductos()">Confirmar Importación</button>
+                    <button id="confirmImportBtn" class="btn-primary" style="width: auto;" onclick="window.app.confirmarImportacionProductos()" disabled>Confirmar Importación</button>
                 </div>
             </div>
         </div>
 
         <div id="clientHistoryModal" class="modal">
-            <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-content">
                 <div class="modal-header">
                     <h2 id="clientHistoryTitle">Historial del Cliente</h2>
                     <button class="close-btn" onclick="window.app.cerrarHistorialCliente()">&times;</button>
@@ -2527,88 +2507,94 @@
                 <div class="modal-body" id="clientHistoryContent"></div>
             </div>
         </div>
-
+        
         <div id="storeAdminModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="storeAdminModalTitle">Gestionar Tienda</h2>
-                    <button class="close-btn" onclick="window.app.closeStoreModal()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="storeAdminForm" onsubmit="window.app.saveStore(event)">
-                        <input type="hidden" id="storeId">
-                        <div class="form-group">
-                            <label>Nombre de la Tienda</label>
-                            <input type="text" id="storeName" required oninput="window.app.generarSlug(this.value, 'storeSlug')">
-                        </div>
-                        <div class="form-group">
-                            <label>Slug (URL)</label>
-                            <input type="text" id="storeSlug" required>
-                             <div class="form-hint">URL amigable para tu tienda. Ej: /mi-tienda</div>
-                        </div>
-                        <div class="form-group">
-                            <label>URL del Logo</label>
-                            <input type="url" id="storeLogo" placeholder="https://ejemplo.com/logo.png">
-                        </div>
-                         <div class="form-group">
-                            <label>Color Primario</label>
-                            <input type="color" id="storePrimaryColor" value="#8A2BE2">
-                        </div>
-                         <div class="form-group">
-                            <label>Color Secundario</label>
-                            <input type="color" id="storeSecondaryColor" value="#FFD700">
-                        </div>
-                        <button type="submit" class="btn-primary">Guardar Tienda</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div id="storePreviewModal" class="modal">
-            <div class="modal-content" style="max-width: 90%; width: 90%; height: 90vh;">
-                <div class="modal-header">
-                    <h2 id="storePreviewTitle">Vista Previa de la Tienda</h2>
-                    <div class="admin-actions">
-                        <button class="btn-secondary" id="prevStoreBtn" onclick="window.app.navigateStorePreview(-1)">‹ Anterior</button>
-                        <button class="btn-secondary" id="nextStoreBtn" onclick="window.app.navigateStorePreview(1)">Siguiente ›</button>
+            <div class="modal-content" style="max-width: 600px;">
+                <form id="storeAdminForm">
+                    <input type="hidden" id="storeId">
+                    <div class="modal-header">
+                        <h2 id="storeAdminModalTitle">Crear Nueva Tienda</h2>
+                        <button type="button" class="close-btn" onclick="window.app.closeStoreModal()">&times;</button>
                     </div>
-                    <button class="close-btn" onclick="window.app.closeStorePreview()">&times;</button>
-                </div>
-                <div class="modal-body" style="padding: 0; height: 100%;">
-                    <iframe id="storePreviewFrame" style="width: 100%; height: 100%; border: none;"></iframe>
-                </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="storeName">Nombre de la Tienda</label>
+                            <input type="text" id="storeName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="storeSlug">Slug (URL)</label>
+                            <input type="text" id="storeSlug" required placeholder="ej: mi-tienda-genial">
+                        </div>
+                        <div class="form-group">
+                            <label for="storeLogo">URL del Logo</label>
+                            <input type="url" id="storeLogo">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label for="storePrimaryColor">Color Primario</label>
+                                <input type="color" id="storePrimaryColor" value="#8A2BE2" style="height: 48px;">
+                            </div>
+                            <div class="form-group">
+                                <label for="storeSecondaryColor">Color Secundario</label>
+                                <input type="color" id="storeSecondaryColor" value="#FFD700" style="height: 48px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" onclick="window.app.closeStoreModal()">Cancelar</button>
+                        <button type="submit" class="btn-primary" style="width: auto;">Guardar Tienda</button>
+                    </div>
+                </form>
             </div>
         </div>
-
-        <footer class="footer">
-            <div class="footer-container">
-                <div class="footer-column" id="footer-info">
+        
+        <div id="storePreviewModal" class="modal">
+            <div class="modal-content" style="width: 95%; max-width: 1400px; height: 90vh; padding: 0; overflow: hidden;">
+                <div class="modal-header" style="padding: 1rem 1.5rem;">
+                    <h2 id="storePreviewTitle">Vista Previa</h2>
+                    <div class="admin-actions">
+                        <button id="prevStoreBtn" class="btn-secondary" onclick="window.app.navigateStorePreview(-1)">Anterior</button>
+                        <button id="nextStoreBtn" class="btn-secondary" onclick="window.app.navigateStorePreview(1)">Siguiente</button>
+                        <button class="close-btn" onclick="window.app.closeStorePreview()" style="font-size: 1.5rem; position: relative; top: -2px;">&times;</button>
+                    </div>
                 </div>
-                <div class="footer-column">
-                    <h4>Categorías</h4>
-                    <ul id="footer-categories">
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h4>Soporte</h4>
-                    <ul>
-                        <li><a href="#">Contacto</a></li>
-                        <li><a href="#">Preguntas Frecuentes</a></li>
-                        <li><a href="#">Garantía</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h4>Síguenos</h4>
-                    <p>Próximamente en redes sociales.</p>
-                </div>
+                <iframe id="storePreviewFrame" style="width: 100%; height: calc(100% - 70px); border: none;"></iframe>
             </div>
-            <div class="footer-bottom" id="footer-copyright">
-            </div>
-        </footer>
+        </div>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-column" id="footer-info">
+            </div>
+            <div class="footer-column">
+                <h4>Categorías</h4>
+                <ul id="footer-categories"></ul>
+            </div>
+            <div class="footer-column">
+                <h4>Enlaces Útiles</h4>
+                <ul>
+                    <li><a href="#">Sobre Nosotros</a></li>
+                    <li><a href="#">Contacto</a></li>
+                    <li><a href="#">Términos y Condiciones</a></li>
+                    <li><a href="#">Política de Privacidad</a></li>
+                </ul>
+            </div>
+             <div class="footer-column">
+                <h4>Síguenos</h4>
+                <ul>
+                    <li><a href="#">Facebook</a></li>
+                    <li><a href="#">Instagram</a></li>
+                    <li><a href="#">Twitter</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom" id="footer-copyright">
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="index.tsx"></script>
 </body>
