@@ -2874,27 +2874,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('categoriaForm')) document.getElementById('categoriaForm').addEventListener('submit', guardarCategoria);
     if (document.getElementById('storeAdminForm')) document.getElementById('storeAdminForm').addEventListener('submit', saveStore);
 
-    // Global click listener for modals and delegated actions
-    document.addEventListener('click', (e) => {
-        // Close modals on overlay click
-        if (e.target.classList.contains('modal')) {
-            const modalId = e.target.id;
-            if (modalId === 'cartModal') closeCart();
-            else if (modalId === 'productoModal') cerrarModalProducto();
-            else if (modalId === 'categoriaModal') cerrarModalCategoria();
-            else if (modalId === 'orderDetailsModal') cerrarDetallesPedido();
-            else if (modalId === 'productDetailModal') cerrarDetalleProducto();
-            else if (modalId === 'importPreviewModal') cerrarModalPrevisualizacion();
-            else if (modalId === 'clientHistoryModal') cerrarHistorialCliente();
-            else if (modalId === 'storeAdminModal') closeStoreModal();
-            else if (modalId === 'storePreviewModal') closeStorePreview();
-        }
+    // Dedicated listener for Root Admin actions for robustness
+    const rootAdminView = document.getElementById('rootAdminView');
+    if (rootAdminView) {
+        rootAdminView.addEventListener('click', (e) => {
+            const actionButton = e.target.closest('[data-action]');
+            if (!actionButton) return;
 
-        const actionButton = e.target.closest('[data-action]');
-        if (!actionButton) return;
-
-        // Delegated actions for root admin view
-        if (actionButton.closest('#rootAdminView')) {
             const { action, slug, name, index, id } = actionButton.dataset;
             switch (action) {
                 case 'create-store':
@@ -2916,6 +2902,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     forceLoginAndLoadStore(slug);
                     break;
             }
+        });
+    }
+
+    // Global click listener mainly for closing modals
+    document.addEventListener('click', (e) => {
+        // Close modals on overlay click
+        if (e.target.classList.contains('modal')) {
+            const modalId = e.target.id;
+            if (modalId === 'cartModal') closeCart();
+            else if (modalId === 'productoModal') cerrarModalProducto();
+            else if (modalId === 'categoriaModal') cerrarModalCategoria();
+            else if (modalId === 'orderDetailsModal') cerrarDetallesPedido();
+            else if (modalId === 'productDetailModal') cerrarDetalleProducto();
+            else if (modalId === 'importPreviewModal') cerrarModalPrevisualizacion();
+            else if (modalId === 'clientHistoryModal') cerrarHistorialCliente();
+            else if (modalId === 'storeAdminModal') closeStoreModal();
+            else if (modalId === 'storePreviewModal') closeStorePreview();
         }
     });
 
