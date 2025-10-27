@@ -183,10 +183,10 @@ function renderRootAdminDashboard() {
                 <td>${storeOrders.length}</td>
                 <td>
                     <div class="table-actions">
-                        <button class="btn-secondary" onclick="window.app.openStorePreview('${store.slug}', '${store.name}', ${index})">Ver</button>
-                        <button class="btn-edit" onclick="window.app.openStoreModal(${store.id})">Editar</button>
-                        <button class="btn-danger" onclick="window.app.deleteStore(${store.id})">Eliminar</button>
-                        <button class="btn-secondary" onclick="window.app.forceLoginAndLoadStore('${store.slug}')">Admin Panel</button>
+                        <button class="btn-secondary" data-action="preview" data-slug="${store.slug}" data-name="${store.name}" data-index="${index}">Ver</button>
+                        <button class="btn-edit" data-action="edit" data-id="${store.id}">Editar</button>
+                        <button class="btn-danger" data-action="delete" data-id="${store.id}">Eliminar</button>
+                        <button class="btn-secondary" data-action="login" data-slug="${store.slug}">Admin Panel</button>
                     </div>
                 </td>
             </tr>
@@ -1313,7 +1313,7 @@ function updateVariantImagePreview(inputEl) {
     const preview = inputEl.nextElementSibling;
     const url = inputEl.value;
     if (url) {
-        preview.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;">`;
+        preview.innerHTML = `<img src="${url}">`;
     } else {
         preview.innerHTML = '🖼️';
     }
@@ -2853,99 +2853,130 @@ function navigateStorePreview(direction) {
 function closeStorePreview() {
     const modal = document.getElementById('storePreviewModal');
     const iframe = document.getElementById('storePreviewFrame');
-    
     if (modal && iframe) {
         modal.style.display = 'none';
-        iframe.src = 'about:blank'; // Clear the iframe content
+        iframe.src = 'about:blank';
         currentPreviewIndex = -1;
     }
 }
 
-// --- Global App Object for HTML on-click handlers ---
-window.app = {
-    // Expose necessary functions to the global scope
-    showStore,
-    showAdmin,
-    openCart: () => document.getElementById('cartModal').style.display = 'block',
-    closeCart: () => document.getElementById('cartModal').style.display = 'none',
-    iniciarSesion,
-    cerrarSesion,
-    forceLoginAndLoadStore,
-    openStorePreview,
-    closeStorePreview,
-    navigateStorePreview,
-    mostrarVistaAdmin,
-    setDashboardDateRange,
-    renderizarDashboard,
-    descargarPlantillaExcel,
-    importarProductos,
-    abrirModalProducto,
-    cargarProductosAdmin,
-    eliminarProducto,
-    abrirModalCategoria,
-    cargarCategoriasAdmin,
-    eliminarCategoria,
-    renderizarPedidosAdmin,
-    resetearFiltrosPedidos,
-    exportarPedidosExcel,
-    filtrarPedidosPorEstado,
-    cambiarVistaPedidos,
-    abrirDetallesPedido,
-    actualizarEstadoPedido,
-    renderizarClientes,
-    exportarClientesExcel,
-    abrirHistorialCliente,
-    guardarProducto,
-    cerrarModalProducto,
-    addVariantGroupUI,
-    addVariantRowUI,
-    updateVariantImagePreview,
-    subirImagenCloudinary,
-    previewImagen,
-    guardarCategoria,
-    cerrarModalCategoria,
-    generarSlug,
-    cerrarDetallesPedido,
-    cerrarDetalleProducto,
-    cerrarModalPrevisualizacion,
-    confirmarImportacionProductos,
-    cerrarHistorialCliente,
-    cerrarYLimpiar,
-    quickAdd,
-    mostrarDetalleProducto,
-    filtrarCategoria,
-    realizarPedido,
-    agregarAlCarrito,
-    actualizarCantidad,
-    eliminarDelCarrito,
-    obtenerUbicacion,
-    // Root Admin Store Management
-    openStoreModal,
-    closeStoreModal,
-    saveStore,
-    deleteStore,
-    // Design Panel
-    inicializarPanelDiseno,
-    aplicarEstilosEnVivo,
-    guardarCambiosDiseno,
-    restablecerDiseno,
-};
+function closeCart() {
+    document.getElementById('cartModal').style.display = 'none';
+}
 
-window.onclick = function(event) {
-    const modals = ['cartModal', 'productoModal', 'categoriaModal', 'orderDetailsModal', 'productDetailModal', 'importPreviewModal', 'clientHistoryModal', 'storePreviewModal', 'storeAdminModal'];
-    modals.forEach(id => {
-        const modalEl = document.getElementById(id);
-        if (event.target == modalEl) {
-            if (id === 'storePreviewModal') {
-                window.app.closeStorePreview();
-            } else if (id === 'storeAdminModal') {
-                 window.app.closeStoreModal();
-            } else {
-                modalEl.style.display = 'none';
+// --- EVENT LISTENERS & INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', () => {
+    initializeAppSaaS();
+
+    // Attach form submission handlers - these don't change often
+    if (document.getElementById('saasLoginForm')) document.getElementById('saasLoginForm').addEventListener('submit', iniciarSesion);
+    if (document.getElementById('productoForm')) document.getElementById('productoForm').addEventListener('submit', guardarProducto);
+    if (document.getElementById('categoriaForm')) document.getElementById('categoriaForm').addEventListener('submit', guardarCategoria);
+    if (document.getElementById('storeAdminForm')) document.getElementById('storeAdminForm').addEventListener('submit', saveStore);
+
+
+    // Attach direct button click handlers for elements that are always present
+    const btnCrearTienda = document.getElementById('btnCrearTienda');
+    if (btnCrearTienda) btnCrearTienda.addEventListener('click', () => openStoreModal(null));
+
+    const rootAdminLogout = document.getElementById('rootAdminLogout');
+    if (rootAdminLogout) rootAdminLogout.addEventListener('click', cerrarSesion);
+
+    // Global click listener for modals and delegated actions
+    document.addEventListener('click', (e) => {
+        // Close modals on overlay click
+        if (e.target.classList.contains('modal')) {
+            const modalId = e.target.id;
+            if (modalId === 'cartModal') closeCart();
+            else if (modalId === 'productoModal') cerrarModalProducto();
+            else if (modalId === 'categoriaModal') cerrarModalCategoria();
+            else if (modalId === 'orderDetailsModal') cerrarDetallesPedido();
+            else if (modalId === 'productDetailModal') cerrarDetalleProducto();
+            else if (modalId === 'importPreviewModal') cerrarModalPrevisualizacion();
+            else if (modalId === 'clientHistoryModal') cerrarHistorialCliente();
+            else if (modalId === 'storeAdminModal') closeStoreModal();
+            else if (modalId === 'storePreviewModal') closeStorePreview();
+        }
+
+        // Delegated actions for root admin stores table
+        const actionButton = e.target.closest('[data-action]');
+        if (actionButton && actionButton.closest('#rootAdminStoresTable')) {
+            const { action, slug, name, index, id } = actionButton.dataset;
+            switch (action) {
+                case 'preview':
+                    openStorePreview(slug, name, parseInt(index));
+                    break;
+                case 'edit':
+                    openStoreModal(parseInt(id));
+                    break;
+                case 'delete':
+                    deleteStore(parseInt(id));
+                    break;
+                case 'login':
+                    forceLoginAndLoadStore(slug);
+                    break;
             }
         }
     });
-}
 
-// --- APP START ---
-initializeAppSaaS();
+    // Expose functions to the global scope for inline `onclick` attributes.
+    window.app = {
+        iniciarSesion,
+        cerrarSesion,
+        showStore,
+        showAdmin,
+        mostrarVistaAdmin,
+        filtrarCategoria,
+        mostrarDetalleProducto,
+        cerrarDetalleProducto,
+        quickAdd,
+        agregarAlCarrito,
+        openCart: () => document.getElementById('cartModal').style.display = 'block',
+        closeCart,
+        actualizarCantidad,
+        eliminarDelCarrito,
+        cerrarYLimpiar,
+        realizarPedido,
+        abrirModalProducto,
+        cerrarModalProducto,
+        guardarProducto,
+        eliminarProducto,
+        abrirModalCategoria,
+        cerrarModalCategoria,
+        guardarCategoria,
+        eliminarCategoria,
+        subirImagenCloudinary,
+        previewImagen,
+        generarSlug,
+        abrirDetallesPedido,
+        cerrarDetallesPedido,
+        actualizarEstadoPedido,
+        cambiarVistaPedidos,
+        filtrarPedidosPorEstado,
+        resetearFiltrosPedidos,
+        exportarPedidosExcel,
+        renderizarDashboard,
+        setDashboardDateRange,
+        descargarPlantillaExcel,
+        importarProductos,
+        cerrarModalPrevisualizacion,
+        confirmarImportacionProductos,
+        renderizarClientes,
+        abrirHistorialCliente,
+        cerrarHistorialCliente,
+        exportarClientesExcel,
+        obtenerUbicacion,
+        addVariantGroupUI,
+        addVariantRowUI,
+        updateVariantImagePreview,
+        inicializarPanelDiseno,
+        aplicarEstilosEnVivo,
+        guardarCambiosDiseno,
+        restablecerDiseno,
+        saveStore,
+        closeStoreModal,
+        openStoreModal,
+        closeStorePreview,
+        navigateStorePreview,
+    };
+});

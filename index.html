@@ -1592,6 +1592,11 @@
             overflow: hidden;
             font-size: 1.5rem;
         }
+        .variant-image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
         
         /* Admin Stock Breakdown Styles */
         .stock-details-container {
@@ -1896,7 +1901,7 @@
                 </div>
                 <div class="nav-links">
                     <span id="rootAdminEmail" style="color: #666; font-size: 0.9rem;"></span>
-                    <button class="btn-danger" onclick="window.app.cerrarSesion()">Cerrar Sesion</button>
+                    <button id="rootAdminLogout" class="btn-danger">Cerrar Sesion</button>
                 </div>
             </nav>
         </header>
@@ -1920,7 +1925,7 @@
              <div class="admin-section">
                 <div class="admin-header" style="margin-bottom: 1rem;">
                     <h2>Tiendas Registradas</h2>
-                    <button class="btn-secondary" onclick="window.app.openStoreModal()">+ Crear Tienda</button>
+                    <button id="btnCrearTienda" class="btn-secondary">+ Crear Tienda</button>
                 </div>
                 <div style="overflow-x: auto;">
                     <table class="products-table">
