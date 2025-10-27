@@ -2874,14 +2874,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('categoriaForm')) document.getElementById('categoriaForm').addEventListener('submit', guardarCategoria);
     if (document.getElementById('storeAdminForm')) document.getElementById('storeAdminForm').addEventListener('submit', saveStore);
 
-
-    // Attach direct button click handlers for elements that are always present
-    const btnCrearTienda = document.getElementById('btnCrearTienda');
-    if (btnCrearTienda) btnCrearTienda.addEventListener('click', () => openStoreModal(null));
-
-    const rootAdminLogout = document.getElementById('rootAdminLogout');
-    if (rootAdminLogout) rootAdminLogout.addEventListener('click', cerrarSesion);
-
     // Global click listener for modals and delegated actions
     document.addEventListener('click', (e) => {
         // Close modals on overlay click
@@ -2898,11 +2890,19 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (modalId === 'storePreviewModal') closeStorePreview();
         }
 
-        // Delegated actions for root admin stores table
         const actionButton = e.target.closest('[data-action]');
-        if (actionButton && actionButton.closest('#rootAdminStoresTable')) {
+        if (!actionButton) return;
+
+        // Delegated actions for root admin view
+        if (actionButton.closest('#rootAdminView')) {
             const { action, slug, name, index, id } = actionButton.dataset;
             switch (action) {
+                case 'create-store':
+                    openStoreModal(null);
+                    break;
+                case 'logout':
+                    cerrarSesion();
+                    break;
                 case 'preview':
                     openStorePreview(slug, name, parseInt(index));
                     break;
