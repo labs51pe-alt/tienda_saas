@@ -96,6 +96,7 @@ let currentChartType = 'line';
 let clientesMap = new Map();
 let selectedLocation = null;
 let currentStore = null;
+let currentPreviewIndex = -1;
 
 const estadoPedidoConfig = {
     'pendiente_pago': { nombre: 'Pendiente Pago', clase: 'status-pendiente_pago' },
@@ -169,7 +170,7 @@ function renderRootAdminDashboard() {
 
     // Stores Table
     const tableBody = document.getElementById('rootAdminStoresTable');
-    tableBody.innerHTML = mockData.stores.map(store => {
+    tableBody.innerHTML = mockData.stores.map((store, index) => {
         const storeOrders = mockData.pedidos.filter(p => p.store_id === store.id);
         const storeRevenue = storeOrders.reduce((sum, order) => sum + order.total, 0);
 
@@ -182,8 +183,10 @@ function renderRootAdminDashboard() {
                 <td>${storeOrders.length}</td>
                 <td>
                     <div class="table-actions">
-                        <button class="btn-secondary" onclick="window.app.openStorePreview('${store.slug}', '${store.name}')">Ver Tienda</button>
-                        <button class="btn-edit" onclick="window.app.forceLoginAndLoadStore('${store.slug}')">Admin</button>
+                        <button class="btn-secondary" onclick="window.app.openStorePreview('${store.slug}', '${store.name}', ${index})">Ver</button>
+                        <button class="btn-edit" onclick="window.app.openStoreModal(${store.id})">Editar</button>
+                        <button class="btn-danger" onclick="window.app.deleteStore(${store.id})">Eliminar</button>
+                        <button class="btn-secondary" onclick="window.app.forceLoginAndLoadStore('${store.slug}')">Admin Panel</button>
                     </div>
                 </td>
             </tr>
@@ -2734,16 +2737,116 @@ function obtenerUbicacion() {
     );
 }
 
+// --- Root Admin Store CRUD ---
+function openStoreModal(storeId = null) {
+    const form = document.getElementById('storeAdminForm');
+    form.reset();
+    const modalTitle = document.getElementById('storeAdminModalTitle');
+    const storeIdInput = document.getElementById('storeId');
+
+    if (storeId) {
+        modalTitle.textContent = 'Editar Tienda';
+        const store = mockData.stores.find(s => s.id === storeId);
+        if (store) {
+            storeIdInput.value = store.id;
+            document.getElementById('storeName').value = store.name;
+            document.getElementById('storeSlug').value = store.slug;
+            document.getElementById('storeLogo').value = store.logo_url || '';
+            document.getElementById('storePrimaryColor').value = store.design_settings.colors.primary;
+            document.getElementById('storeSecondaryColor').value = store.design_settings.colors.secondary;
+        }
+    } else {
+        modalTitle.textContent = 'Crear Nueva Tienda';
+        storeIdInput.value = '';
+    }
+    document.getElementById('storeAdminModal').style.display = 'block';
+}
+
+function closeStoreModal() {
+    document.getElementById('storeAdminModal').style.display = 'none';
+}
+
+function saveStore(event) {
+    event.preventDefault();
+    const storeId = document.getElementById('storeId').value;
+    const storeData = {
+        name: document.getElementById('storeName').value,
+        slug: document.getElementById('storeSlug').value,
+        logo_url: document.getElementById('storeLogo').value,
+        // For simplicity, we create a new design_settings object on each save
+        design_settings: {
+            template: 'moderna', // default
+            colors: {
+                primary: document.getElementById('storePrimaryColor').value,
+                secondary: document.getElementById('storeSecondaryColor').value,
+                background: '#ffffff', // default
+                text: '#1a1a1a' // default
+            },
+            fonts: {
+                headings: "'Poppins', sans-serif", // default
+                body: "'Lato', sans-serif" // default
+            }
+        }
+    };
+
+    if (storeId) { // Update
+        const index = mockData.stores.findIndex(s => s.id == storeId);
+        if (index > -1) {
+            mockData.stores[index] = { ...mockData.stores[index], ...storeData };
+        }
+        mostrarNotificacion('Tienda actualizada con éxito', 'success');
+    } else { // Create
+        const newId = mockData.stores.length > 0 ? Math.max(...mockData.stores.map(s => s.id)) + 1 : 1;
+        mockData.stores.push({ id: newId, ...storeData });
+        mostrarNotificacion('Tienda creada con éxito', 'success');
+    }
+    
+    closeStoreModal();
+    renderRootAdminDashboard();
+}
+
+function deleteStore(storeId) {
+    if (!confirm('¿Estás seguro? Eliminar una tienda también borrará todos sus productos, categorías y pedidos. Esta acción no se puede deshacer.')) return;
+    
+    const index = mockData.stores.findIndex(s => s.id === storeId);
+    if (index > -1) {
+        mockData.stores.splice(index, 1);
+        // Cascade delete mock data
+        mockData.products = mockData.products.filter(p => p.store_id !== storeId);
+        mockData.categories = mockData.categories.filter(c => c.store_id !== storeId);
+        mockData.pedidos = mockData.pedidos.filter(o => o.store_id !== storeId);
+        
+        mostrarNotificacion('Tienda eliminada correctamente', 'success');
+        renderRootAdminDashboard();
+    } else {
+        mostrarNotificacion('No se pudo encontrar la tienda para eliminar', 'error');
+    }
+}
+
+
 // --- New Store Preview Functions ---
-function openStorePreview(slug, name) {
+function openStorePreview(slug, name, index) {
     const modal = document.getElementById('storePreviewModal');
     const iframe = document.getElementById('storePreviewFrame');
     const title = document.getElementById('storePreviewTitle');
     
     if (modal && iframe && title) {
+        currentPreviewIndex = index;
         title.textContent = `Vista Previa: ${name}`;
         iframe.src = `?store=${slug}`;
         modal.style.display = 'block';
+        
+        // Update nav buttons
+        document.getElementById('prevStoreBtn').disabled = index <= 0;
+        document.getElementById('nextStoreBtn').disabled = index >= mockData.stores.length - 1;
+    }
+}
+
+function navigateStorePreview(direction) {
+    const newIndex = currentPreviewIndex + direction;
+    if (newIndex >= 0 && newIndex < mockData.stores.length) {
+        const store = mockData.stores[newIndex];
+        openStorePreview(store.slug, store.name, newIndex);
     }
 }
 
@@ -2754,6 +2857,7 @@ function closeStorePreview() {
     if (modal && iframe) {
         modal.style.display = 'none';
         iframe.src = 'about:blank'; // Clear the iframe content
+        currentPreviewIndex = -1;
     }
 }
 
@@ -2769,6 +2873,7 @@ window.app = {
     forceLoginAndLoadStore,
     openStorePreview,
     closeStorePreview,
+    navigateStorePreview,
     mostrarVistaAdmin,
     setDashboardDateRange,
     renderizarDashboard,
@@ -2814,6 +2919,11 @@ window.app = {
     actualizarCantidad,
     eliminarDelCarrito,
     obtenerUbicacion,
+    // Root Admin Store Management
+    openStoreModal,
+    closeStoreModal,
+    saveStore,
+    deleteStore,
     // Design Panel
     inicializarPanelDiseno,
     aplicarEstilosEnVivo,
@@ -2822,12 +2932,14 @@ window.app = {
 };
 
 window.onclick = function(event) {
-    const modals = ['cartModal', 'productoModal', 'categoriaModal', 'orderDetailsModal', 'productDetailModal', 'importPreviewModal', 'clientHistoryModal', 'storePreviewModal'];
+    const modals = ['cartModal', 'productoModal', 'categoriaModal', 'orderDetailsModal', 'productDetailModal', 'importPreviewModal', 'clientHistoryModal', 'storePreviewModal', 'storeAdminModal'];
     modals.forEach(id => {
         const modalEl = document.getElementById(id);
         if (event.target == modalEl) {
             if (id === 'storePreviewModal') {
                 window.app.closeStorePreview();
+            } else if (id === 'storeAdminModal') {
+                 window.app.closeStoreModal();
             } else {
                 modalEl.style.display = 'none';
             }

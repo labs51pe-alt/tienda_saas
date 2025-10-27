@@ -1920,6 +1920,7 @@
              <div class="admin-section">
                 <div class="admin-header" style="margin-bottom: 1rem;">
                     <h2>Tiendas Registradas</h2>
+                    <button class="btn-secondary" onclick="window.app.openStoreModal()">+ Crear Tienda</button>
                 </div>
                 <div style="overflow-x: auto;">
                     <table class="products-table">
@@ -2522,10 +2523,50 @@
             </div>
         </div>
 
+        <div id="storeAdminModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="storeAdminModalTitle">Gestionar Tienda</h2>
+                    <button class="close-btn" onclick="window.app.closeStoreModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="storeAdminForm" onsubmit="window.app.saveStore(event)">
+                        <input type="hidden" id="storeId">
+                        <div class="form-group">
+                            <label>Nombre de la Tienda</label>
+                            <input type="text" id="storeName" required oninput="window.app.generarSlug(this.value, 'storeSlug')">
+                        </div>
+                        <div class="form-group">
+                            <label>Slug (URL)</label>
+                            <input type="text" id="storeSlug" required>
+                             <div class="form-hint">URL amigable para tu tienda. Ej: /mi-tienda</div>
+                        </div>
+                        <div class="form-group">
+                            <label>URL del Logo</label>
+                            <input type="url" id="storeLogo" placeholder="https://ejemplo.com/logo.png">
+                        </div>
+                         <div class="form-group">
+                            <label>Color Primario</label>
+                            <input type="color" id="storePrimaryColor" value="#8A2BE2">
+                        </div>
+                         <div class="form-group">
+                            <label>Color Secundario</label>
+                            <input type="color" id="storeSecondaryColor" value="#FFD700">
+                        </div>
+                        <button type="submit" class="btn-primary">Guardar Tienda</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <div id="storePreviewModal" class="modal">
             <div class="modal-content" style="max-width: 90%; width: 90%; height: 90vh;">
                 <div class="modal-header">
                     <h2 id="storePreviewTitle">Vista Previa de la Tienda</h2>
+                    <div class="admin-actions">
+                        <button class="btn-secondary" id="prevStoreBtn" onclick="window.app.navigateStorePreview(-1)">‹ Anterior</button>
+                        <button class="btn-secondary" id="nextStoreBtn" onclick="window.app.navigateStorePreview(1)">Siguiente ›</button>
+                    </div>
                     <button class="close-btn" onclick="window.app.closeStorePreview()">&times;</button>
                 </div>
                 <div class="modal-body" style="padding: 0; height: 100%;">
