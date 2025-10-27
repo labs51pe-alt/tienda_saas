@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Commerce SaaS Platform</title>
+    <title>saasPe - Plataforma E-Commerce</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lato:wght@400;700&family=Poppins:wght@400;600;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
@@ -1859,7 +1859,7 @@
     <div id="loginView">
         <div class="login-card">
             <div class="logo">
-                <span class="logo-red">SaaS</span><span class="logo-number">Commerce</span>
+                <span class="logo-red">saas</span><span class="logo-number">Pe</span>
             </div>
             <h2>Bienvenido de Nuevo</h2>
             <p>Ingresa a tu cuenta para administrar tu negocio.</p>
@@ -1891,7 +1891,7 @@
             <nav class="nav-container">
                 <div>
                     <div class="logo">
-                         <span class="logo-red">SaaS</span><span class="logo-number">Commerce</span>
+                         <span class="logo-red">saas</span><span class="logo-number">Pe</span>
                     </div>
                 </div>
                 <div class="nav-links">
@@ -2519,6 +2519,18 @@
                     <button class="close-btn" onclick="window.app.cerrarHistorialCliente()">&times;</button>
                 </div>
                 <div class="modal-body" id="clientHistoryContent"></div>
+            </div>
+        </div>
+
+        <div id="storePreviewModal" class="modal">
+            <div class="modal-content" style="max-width: 90%; width: 90%; height: 90vh;">
+                <div class="modal-header">
+                    <h2 id="storePreviewTitle">Vista Previa de la Tienda</h2>
+                    <button class="close-btn" onclick="window.app.closeStorePreview()">&times;</button>
+                </div>
+                <div class="modal-body" style="padding: 0; height: 100%;">
+                    <iframe id="storePreviewFrame" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
             </div>
         </div>
 

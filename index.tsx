@@ -182,7 +182,7 @@ function renderRootAdminDashboard() {
                 <td>${storeOrders.length}</td>
                 <td>
                     <div class="table-actions">
-                        <a href="?store=${store.slug}" class="btn-secondary" style="text-decoration: none; padding: 0.5rem 1rem;">Ver Tienda</a>
+                        <button class="btn-secondary" onclick="window.app.openStorePreview('${store.slug}', '${store.name}')">Ver Tienda</button>
                         <button class="btn-edit" onclick="window.app.forceLoginAndLoadStore('${store.slug}')">Admin</button>
                     </div>
                 </td>
@@ -2734,6 +2734,29 @@ function obtenerUbicacion() {
     );
 }
 
+// --- New Store Preview Functions ---
+function openStorePreview(slug, name) {
+    const modal = document.getElementById('storePreviewModal');
+    const iframe = document.getElementById('storePreviewFrame');
+    const title = document.getElementById('storePreviewTitle');
+    
+    if (modal && iframe && title) {
+        title.textContent = `Vista Previa: ${name}`;
+        iframe.src = `?store=${slug}`;
+        modal.style.display = 'block';
+    }
+}
+
+function closeStorePreview() {
+    const modal = document.getElementById('storePreviewModal');
+    const iframe = document.getElementById('storePreviewFrame');
+    
+    if (modal && iframe) {
+        modal.style.display = 'none';
+        iframe.src = 'about:blank'; // Clear the iframe content
+    }
+}
+
 // --- Global App Object for HTML on-click handlers ---
 window.app = {
     // Expose necessary functions to the global scope
@@ -2744,6 +2767,8 @@ window.app = {
     iniciarSesion,
     cerrarSesion,
     forceLoginAndLoadStore,
+    openStorePreview,
+    closeStorePreview,
     mostrarVistaAdmin,
     setDashboardDateRange,
     renderizarDashboard,
@@ -2797,11 +2822,15 @@ window.app = {
 };
 
 window.onclick = function(event) {
-    const modals = ['cartModal', 'productoModal', 'categoriaModal', 'orderDetailsModal', 'productDetailModal', 'importPreviewModal', 'clientHistoryModal'];
+    const modals = ['cartModal', 'productoModal', 'categoriaModal', 'orderDetailsModal', 'productDetailModal', 'importPreviewModal', 'clientHistoryModal', 'storePreviewModal'];
     modals.forEach(id => {
         const modalEl = document.getElementById(id);
         if (event.target == modalEl) {
-            modalEl.style.display = 'none';
+            if (id === 'storePreviewModal') {
+                window.app.closeStorePreview();
+            } else {
+                modalEl.style.display = 'none';
+            }
         }
     });
 }

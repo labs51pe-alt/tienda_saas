@@ -1,6 +1,6 @@
 {
-  "name": "E-Commerce SaaS Platform",
-  "description": "A flexible SaaS e-commerce platform for any business. Create and manage your own online store with ease.",
+  "name": "saasPe - Plataforma E-Commerce",
+  "description": "Una plataforma SaaS de e-commerce flexible para cualquier negocio. Crea y gestiona tu propia tienda online con facilidad.",
   "requestFramePermissions": [
     "geolocation"
   ]
