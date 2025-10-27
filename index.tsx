@@ -2867,21 +2867,31 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('categoriaForm')) document.getElementById('categoriaForm').addEventListener('submit', guardarCategoria);
     if (document.getElementById('storeAdminForm')) document.getElementById('storeAdminForm').addEventListener('submit', saveStore);
 
-    // Dedicated listener for Root Admin actions for robustness
-    const rootAdminView = document.getElementById('rootAdminView');
-    if (rootAdminView) {
-        rootAdminView.addEventListener('click', (e) => {
+    // Listener for the "Create Store" button
+    const createStoreBtn = document.getElementById('createStoreBtn');
+    if (createStoreBtn) {
+        createStoreBtn.addEventListener('click', () => {
+            openStoreModal(null);
+        });
+    }
+
+    // Listener for the Root Admin Logout button
+    const rootLogoutBtn = document.getElementById('rootLogoutBtn');
+    if (rootLogoutBtn) {
+        rootLogoutBtn.addEventListener('click', () => {
+            cerrarSesion();
+        });
+    }
+
+    // Delegated listener for actions within the stores table
+    const storesTable = document.getElementById('rootAdminStoresTable');
+    if (storesTable) {
+        storesTable.addEventListener('click', (e) => {
             const actionButton = e.target.closest('[data-action]');
             if (!actionButton) return;
 
             const { action, slug, id } = actionButton.dataset;
             switch (action) {
-                case 'create-store':
-                    openStoreModal(null);
-                    break;
-                case 'logout':
-                    cerrarSesion();
-                    break;
                 case 'manage':
                     manageStore(slug);
                     break;
