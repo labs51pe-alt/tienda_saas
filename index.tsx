@@ -85,6 +85,7 @@ let categoriaActual = 'todos';
 let productos = [];
 let categorias = [];
 let usuarioActual = null;
+let realUser = null; // For Super Admin impersonation
 let pedidosAdmin = [];
 let productosParaImportar = [];
 let currentOrderView = 'list';
@@ -96,7 +97,6 @@ let currentChartType = 'line';
 let clientesMap = new Map();
 let selectedLocation = null;
 let currentStore = null;
-let currentPreviewIndex = -1;
 
 const estadoPedidoConfig = {
     'pendiente_pago': { nombre: 'Pendiente Pago', clase: 'status-pendiente_pago' },
@@ -170,7 +170,7 @@ function renderRootAdminDashboard() {
 
     // Stores Table
     const tableBody = document.getElementById('rootAdminStoresTable');
-    tableBody.innerHTML = mockData.stores.map((store, index) => {
+    tableBody.innerHTML = mockData.stores.map((store) => {
         const storeOrders = mockData.pedidos.filter(p => p.store_id === store.id);
         const storeRevenue = storeOrders.reduce((sum, order) => sum + order.total, 0);
 
@@ -183,10 +183,9 @@ function renderRootAdminDashboard() {
                 <td>${storeOrders.length}</td>
                 <td>
                     <div class="table-actions">
-                        <button class="btn-secondary" data-action="preview" data-slug="${store.slug}" data-name="${store.name}" data-index="${index}">Ver</button>
+                        <button class="btn-secondary" data-action="manage" data-slug="${store.slug}">Administrar</button>
                         <button class="btn-edit" data-action="edit" data-id="${store.id}">Editar</button>
                         <button class="btn-danger" data-action="delete" data-id="${store.id}">Eliminar</button>
-                        <button class="btn-secondary" data-action="login" data-slug="${store.slug}">Admin Panel</button>
                     </div>
                 </td>
             </tr>
@@ -387,7 +386,7 @@ function applyStoreBranding() {
     // Other branding elements are now in applyCurrentDesignSettings
 }
 
-// --- AUTHENTICATION ---
+// --- AUTHENTICATION & IMPERSONATION ---
 async function iniciarSesion(event) {
     event.preventDefault();
     const email = document.getElementById('saasEmail').value;
@@ -439,15 +438,46 @@ async function handlePostLogin() {
     }
 }
 
-async function forceLoginAndLoadStore(slug) {
-    // This is a helper for the root admin to jump into a store's admin panel
-    usuarioActual = { email: 'admin@saas.com (View as Owner)', id: 'root-admin-id', role: 'store_owner' };
+async function manageStore(slug) {
+    if (!realUser) { 
+        realUser = { ...usuarioActual };
+    }
+    usuarioActual = {
+        email: `${realUser.email} (Administrando Tienda)`,
+        id: realUser.id,
+        role: 'store_owner'
+    };
     await loadStore(slug);
+}
+
+function returnToSuperAdmin() {
+    if (realUser) {
+        usuarioActual = { ...realUser };
+        realUser = null;
+        if (pedidosChannel) {
+            supabaseClient.removeChannel(pedidosChannel);
+            pedidosChannel = null;
+        }
+        renderRootAdminDashboard();
+    }
 }
 
 function mostrarPanelAdmin() {
     document.getElementById('adminPanel').style.display = 'block';
-    document.getElementById('adminEmail').textContent = usuarioActual.email;
+    
+    const impersonationControls = document.getElementById('impersonation-controls');
+    const regularControls = document.getElementById('regular-admin-controls');
+
+    if (realUser) { // We are impersonating
+        impersonationControls.style.display = 'flex';
+        regularControls.style.display = 'none';
+        document.getElementById('impersonatingEmail').textContent = usuarioActual.email;
+    } else {
+        impersonationControls.style.display = 'none';
+        regularControls.style.display = 'block';
+        document.getElementById('adminEmail').textContent = usuarioActual.email;
+    }
+    
     document.getElementById('adminPanelTitle').textContent = `Panel de Administración (${currentStore.name})`;
     cargarProductosAdmin();
     cargarPedidosAdmin();
@@ -457,6 +487,7 @@ function mostrarPanelAdmin() {
 }
 
 async function cerrarSesion() {
+    realUser = null; // Clear impersonation state on full logout
     if (DEMO_MODE) {
         usuarioActual = null;
         renderLoginPage();
@@ -485,7 +516,6 @@ function showAdmin() {
     if (usuarioActual) {
         mostrarPanelAdmin();
     } else {
-        // This part is less likely to be hit with the new flow, but good for safety
         renderLoginPage(); 
     }
 }
@@ -2823,43 +2853,6 @@ function deleteStore(storeId) {
     }
 }
 
-
-// --- New Store Preview Functions ---
-function openStorePreview(slug, name, index) {
-    const modal = document.getElementById('storePreviewModal');
-    const iframe = document.getElementById('storePreviewFrame');
-    const title = document.getElementById('storePreviewTitle');
-    
-    if (modal && iframe && title) {
-        currentPreviewIndex = index;
-        title.textContent = `Vista Previa: ${name}`;
-        iframe.src = `?store=${slug}`;
-        modal.style.display = 'block';
-        
-        // Update nav buttons
-        document.getElementById('prevStoreBtn').disabled = index <= 0;
-        document.getElementById('nextStoreBtn').disabled = index >= mockData.stores.length - 1;
-    }
-}
-
-function navigateStorePreview(direction) {
-    const newIndex = currentPreviewIndex + direction;
-    if (newIndex >= 0 && newIndex < mockData.stores.length) {
-        const store = mockData.stores[newIndex];
-        openStorePreview(store.slug, store.name, newIndex);
-    }
-}
-
-function closeStorePreview() {
-    const modal = document.getElementById('storePreviewModal');
-    const iframe = document.getElementById('storePreviewFrame');
-    if (modal && iframe) {
-        modal.style.display = 'none';
-        iframe.src = 'about:blank';
-        currentPreviewIndex = -1;
-    }
-}
-
 function closeCart() {
     document.getElementById('cartModal').style.display = 'none';
 }
@@ -2881,7 +2874,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const actionButton = e.target.closest('[data-action]');
             if (!actionButton) return;
 
-            const { action, slug, name, index, id } = actionButton.dataset;
+            const { action, slug, id } = actionButton.dataset;
             switch (action) {
                 case 'create-store':
                     openStoreModal(null);
@@ -2889,17 +2882,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'logout':
                     cerrarSesion();
                     break;
-                case 'preview':
-                    openStorePreview(slug, name, parseInt(index));
+                case 'manage':
+                    manageStore(slug);
                     break;
                 case 'edit':
                     openStoreModal(parseInt(id));
                     break;
                 case 'delete':
                     deleteStore(parseInt(id));
-                    break;
-                case 'login':
-                    forceLoginAndLoadStore(slug);
                     break;
             }
         });
@@ -2918,7 +2908,6 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (modalId === 'importPreviewModal') cerrarModalPrevisualizacion();
             else if (modalId === 'clientHistoryModal') cerrarHistorialCliente();
             else if (modalId === 'storeAdminModal') closeStoreModal();
-            else if (modalId === 'storePreviewModal') closeStorePreview();
         }
     });
 
@@ -2926,6 +2915,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app = {
         iniciarSesion,
         cerrarSesion,
+        returnToSuperAdmin,
         showStore,
         showAdmin,
         mostrarVistaAdmin,
@@ -2979,7 +2969,5 @@ document.addEventListener('DOMContentLoaded', () => {
         saveStore,
         closeStoreModal,
         openStoreModal,
-        closeStorePreview,
-        navigateStorePreview,
     };
 });

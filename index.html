@@ -2011,8 +2011,14 @@
                         <div class="admin-header">
                             <h2 id="adminPanelTitle">Panel de Administracion</h2>
                             <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                                <span id="adminEmail" style="color: #666; font-size: 0.9rem;"></span>
-                                 <button class="btn-danger" onclick="window.app.cerrarSesion()">Cerrar Sesion</button>
+                                <div id="impersonation-controls" style="display: none; align-items: center; gap: 1rem;">
+                                    <span id="impersonatingEmail" style="color: #666; font-size: 0.9rem;"></span>
+                                    <button class="btn-secondary" onclick="window.app.returnToSuperAdmin()">← Volver a Super Admin</button>
+                                </div>
+                                <div id="regular-admin-controls" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                                    <span id="adminEmail" style="color: #666; font-size: 0.9rem;"></span>
+                                    <button class="btn-danger" onclick="window.app.cerrarSesion()">Cerrar Sesion</button>
+                                </div>
                             </div>
                         </div>
 
@@ -2548,19 +2554,6 @@
             </div>
         </div>
         
-        <div id="storePreviewModal" class="modal">
-            <div class="modal-content" style="width: 95%; max-width: 1400px; height: 90vh; padding: 0; overflow: hidden;">
-                <div class="modal-header" style="padding: 1rem 1.5rem;">
-                    <h2 id="storePreviewTitle">Vista Previa</h2>
-                    <div class="admin-actions">
-                        <button id="prevStoreBtn" class="btn-secondary" onclick="window.app.navigateStorePreview(-1)">Anterior</button>
-                        <button id="nextStoreBtn" class="btn-secondary" onclick="window.app.navigateStorePreview(1)">Siguiente</button>
-                        <button class="close-btn" onclick="window.app.closeStorePreview()" style="font-size: 1.5rem; position: relative; top: -2px;">&times;</button>
-                    </div>
-                </div>
-                <iframe id="storePreviewFrame" style="width: 100%; height: calc(100% - 70px); border: none;"></iframe>
-            </div>
-        </div>
     </div>
     
     <footer class="footer">
